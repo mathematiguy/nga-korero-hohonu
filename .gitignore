@@ -39,3 +39,5 @@ rsconnect/
 data/*.csv
 slides/*.html
 *.Rproj
+slides/sound/*.wav
+
