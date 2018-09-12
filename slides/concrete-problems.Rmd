@@ -12,7 +12,7 @@ font-family: 'Helvetica'
 library(tidyverse)
 library(gghighlight)
 library(reports)
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, message=FALSE, warning=FALSE)
 ```
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
@@ -20,25 +20,40 @@ transcriptions <- read_csv("../data/transcriptions.csv")
 transcript_data <- read_csv("../data/transcript_data.csv")
 ```
 
-# Tēnā Koutou
-
-## Ko wai au? / Who am I?
-
-- Data Scientist at Dragonfly Data Science in Wellington
-- Postgraduate Diploma in Pure Mathematics
-- Interests in data science: esp. Machine Learning + NLP
-- Currently working on Speech to Text in Te Reo Maori
-- Used to work on Confidentiality and Environmental Accounts at Stats NZ
-
-# Speech to text in Te Reo Māori 
-
-## Mozilla DeepSpeech
-
-```{r, out.height = "600px"}
-knitr::include_graphics("images/usage.gif")
-```
+# The team
 
 ## 
+
+```{r echo=FALSE}
+library(png)
+library(jpeg)
+library(grid)
+library(gridExtra)
+img1 <-  rasterGrob(as.raster(readPNG("images/te-hiku-logo.png")), interpolate = FALSE)
+img2 <-  rasterGrob(as.raster(readJPEG("images/ka-hao-logo.jpeg")), interpolate = FALSE)
+img3 <-  rasterGrob(as.raster(readPNG("images/dragonfly-logo-rgb.png")), interpolate = FALSE)
+grid.arrange(img1, img2, img3, ncol = 2)
+```
+
+## Dragonfly Team
+
+- Edward Abraham
+- Miles Thompson
+- Douglas Bagnall
+- Caleb Moses
+- Hamish MacKenzie
+
+## The data
+
+The model was trained on a collection of around 192,000 audio recordings collected from the Korero Maori website.
+
+Efforts were made to manually review the recordings to see which recordings were pronounced accurately. 
+
+In the end, Te Hiku oversaw the manual approval of around 27,000 recordings (about 52 hours).
+
+We trained 3 models over the course of the project, and successive models were used to approve more recordings. In the end, we machine approved an additional 97000 recordings (around 190 hours)
+
+## Mozilla DeepSpeech
 
 From [their github](https://github.com/mozilla/DeepSpeech):
 
@@ -46,13 +61,54 @@ From [their github](https://github.com/mozilla/DeepSpeech):
 knitr::include_graphics("images/DeepSpeech-header.png")
 ```
 
+## Model architecture
+
+DeepSpeech works using the following:
+
+- Raw audio broken into 20ms chunks
+- Mel-Frequency Cepstrum Encoding of each chunk
+- Deep Recurrent Neural Network
+- Character probability outputs
+- Connectionist Temporal Classification (CTC) compacts the stream of characters
+- Language model selects likely sequence of words as output 
+
+## Mel-Frequency Cepstrum Encoding
+
+```{r, out.height="500px"}
+img1 <-  rasterGrob(as.raster(readPNG("images/mfcc-block-diagram.png")), interpolate = FALSE)
+img2 <-  rasterGrob(as.raster(readPNG("images/mel-scale-filter-bank.png")), interpolate = FALSE)
+grid.arrange(img1, img2, ncol = 1)
+```
+
+## Deep Recurrent Neural Network
+
+```{r out.height="500px", out.width="500px", fig.align="center"}
+knitr::include_graphics("images/rnn-architecture.png")
+```
+
+## Connectionist Temporal Classification
+
+```{r out.height="500px", out.width="700px", fig.align="center"}
+knitr::include_graphics("images/deep-speech-ctc-small.png")
+```
+
+## KenLM Language Model
+
+```{r out.height="500px", out.width="600px", fig.align="center"}
+# Kenneth Heafield
+knitr::include_graphics("images/trie-diagram.png")
+```
+
+## Running inference
+
 DeepSpeech requires the following to run:
 
 - an alphabet
 - a trained model graph
-- a trained language model 
+- a trained language model
 
-```{bash echo=FALSE, eval=FALSE}
+```{bash, eval = FALSE, echo = TRUE}
+# An example inference
 ./deepspeech --model models/output_graph.pbmm \
   --alphabet models/alphabet.txt \
   --lm models/lm.binary \
@@ -67,7 +123,7 @@ Training a model required the following:
 - a pipeline to download audio from the [Corpora API](https://github.com/tehikumedia/corpora)
 - splitting the recordings into: train, test and dev sets
 - a corpus of text to build a language model
-- a `p3.8xlarge` cloud compute instance on Amazon Web Services
+- a large GPU enabled cloud compute instance on Amazon Web Services
 
 Dragonfly also made use of our Continuous Integration System, Gorbachev to:
 
@@ -119,7 +175,7 @@ transcriptions %>%
             stat = 'identity', vjust = -0.5) +
   guides(fill = FALSE) +
   ylab("Word Error Rate") +
-  xlab("Heldout Set") +
+  xlab("Approved Set") +
   theme_minimal()
 ```
 
@@ -138,7 +194,7 @@ transcriptions %>%
             stat = 'identity', vjust = -0.5) +
   guides(fill = FALSE) +
   ylab("Word Error Rate") +
-  xlab("Heldout Set") +
+  xlab("Approved Set") +
   theme_minimal()
 ```
 
@@ -205,8 +261,25 @@ transcriptions %>%
   knitr::kable()
 ```
 
-## Thank you
+## Other achievements
 
+Based on our gained experience end to end training of new models has been simplified significantly.
+
+We were also able to cut down the cost of training new models significantly with early stopping
+
+This opens possibilities to improve the model through hyperparameter search
+
+## What next?
+
+- Te Hiku has launched their next campaign, this time transcribing recorded audio from their archive
+- Including other sources of transcribed audio (e.g. Te Reo o Te Kainga)
+- Streaming inference
+- Hyperparameter optimisation
+- Adding more text to the language model corpus
+- Removing consonant clusters
+- Language model improvements using Recurrent Neural Networks
+
+# Thank you
 
 
 
